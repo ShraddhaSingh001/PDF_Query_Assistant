@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Query Assistant</title>
+    <link rel="stylesheet" href="csscode.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="header__title">PDF Query Assistant</h1>
+            <div class="header__controls">
+                <button class="btn btn--outline btn--sm" id="themeToggle">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="btn btn--primary btn--sm" id="settingsBtn">Settings</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="app-grid">
+                <!-- Left Panel - PDF Upload & Preview -->
+                <div class="pdf-panel">
+                    <div class="upload-section">
+                        <div class="upload-zone" id="uploadZone">
+                            <div class="upload-content">
+                                <div class="upload-icon">📄</div>
+                                <h3>Upload PDF Document</h3>
+                                <p>Drag and drop your PDF file here, or click to select</p>
+                                <p class="upload-specs">Max size: 10MB • PDF files only</p>
+                                <input type="file" id="pdfInput" accept=".pdf" hidden>
+                            </div>
+                        </div>
+                        
+                        <!-- PDF Info Display -->
+                        <div class="pdf-info hidden" id="pdfInfo">
+                            <div class="pdf-info__header">
+                                <div class="pdf-info__details">
+                                    <h4 id="pdfFileName">document.pdf</h4>
+                                    <p id="pdfFileStats">0 pages • 0 MB</p>
+                                </div>
+                                <button class="btn btn--outline btn--sm" id="removePdfBtn">Remove</button>
+                            </div>
+                            <div class="extraction-progress hidden" id="extractionProgress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <p id="progressText">Extracting text...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Preview -->
+                    <div class="text-preview hidden" id="textPreview">
+                        <div class="text-preview__header">
+                            <h4>Document Preview</h4>
+                            <span class="status status--success" id="extractionStatus">Ready</span>
+                        </div>
+                        <div class="text-preview__content" id="previewContent">
+                            <!-- Extracted text will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Chat Interface -->
+                <div class="chat-panel">
+                    <div class="chat-header">
+                        <h3>Ask Questions</h3>
+                        <button class="btn btn--outline btn--sm" id="clearChatBtn">Clear Chat</button>
+                    </div>
+
+                    <!-- Sample Questions -->
+                    <div class="sample-questions" id="sampleQuestions">
+                        <p class="sample-questions__title">Try asking:</p>
+                        <div class="sample-questions__list">
+                            <button class="sample-question" data-question="What is the main topic of this document?">
+                                What is the main topic of this document?
+                            </button>
+                            <button class="sample-question" data-question="Summarize the key points in 3-4 sentences">
+                                Summarize the key points in 3-4 sentences
+                            </button>
+                            <button class="sample-question" data-question="What are the main conclusions or recommendations?">
+                                What are the main conclusions or recommendations?
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="welcome-message">
+                            <p>Upload a PDF document to start asking questions about its content.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-input">
+                        <div class="input-group">
+                            <textarea 
+                                class="form-control chat-input__field" 
+                                id="questionInput" 
+                                placeholder="Ask a question about your PDF document..."
+                                rows="2"
+                                disabled
+                            ></textarea>
+                            <button class="btn btn--primary chat-input__btn" id="sendBtn" disabled>
+                                <span class="send-text">Send</span>
+                                <span class="send-loading hidden">...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal__backdrop" id="modalBackdrop"></div>
+        <div class="modal__content">
+            <div class="modal__header">
+                <h3>Settings</h3>
+                <button class="modal__close" id="closeSettingsBtn">&times;</button>
+            </div>
+            
+            <div class="modal__body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label class="form-label" for="apiProvider">API Provider</label>
+                        <select class="form-control" id="apiProvider">
+                            <option value="groq">Groq</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="github">GitHub Models</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="apiKey">API Key</label>
+                        <input type="password" class="form-control" id="apiKey" placeholder="Enter your API key">
+                        <small class="form-help">Your API key is stored locally and never sent to our servers</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="modelSelect">Model</label>
+                        <select class="form-control" id="modelSelect">
+                            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="maxTokens">Max Response Length</label>
+                        <input type="range" class="form-control" id="maxTokens" min="100" max="2000" value="1000">
+                        <div class="range-value" id="maxTokensValue">1000 tokens</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="temperature">Creativity (Temperature)</label>
+                        <input type="range" class="form-control" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                        <div class="range-value" id="temperatureValue">0.7</div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal__footer">
+                <button class="btn btn--outline" id="exportChatBtn">Export Chat</button>
+                <button class="btn btn--primary" id="saveSettingsBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>
+                <strong>Tips:</strong> 
+                Upload any PDF document and ask specific questions about its content. 
+                The AI will analyze the document and provide answers based on the text.
+                Use Ctrl+Enter to send messages quickly.
+            </p>
+        </div>
+    </footer>
+
+    <script src="jscode.js"></script>
+</body>
+</html>
