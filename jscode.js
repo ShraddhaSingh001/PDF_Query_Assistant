@@ -7,7 +7,7 @@ class PDFQueryAssistant {
         this.conversation = [];
         this.settings = {
             apiProvider: 'groq',
-            apiKey: Add_your_API_Key_here',
+            apiKey: 'Add_your_API_Key_here',
             model: 'llama-3.3-70b-versatile',
             maxTokens: 1000,
             temperature: 0.7,
