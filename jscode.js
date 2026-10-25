@@ -7,8 +7,8 @@ class PDFQueryAssistant {
         this.conversation = [];
         this.settings = {
             apiProvider: 'groq',
-            apiKey: 'Add_your_API_Key_here',
-            model: 'llama-3.3-70b-versatile',
+            apiKey: '',
+            model: 'openai/gpt-oss-20b',
             maxTokens: 1000,
             temperature: 0.7,
             theme: 'light'
@@ -18,7 +18,8 @@ class PDFQueryAssistant {
             groq: {
                 name: 'Groq',
                 baseUrl: 'https://api.groq.com/openai/v1',
-                models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'],
+                models: [ 'openai/gpt-oss-20b',
+        'openai/gpt-oss-120b'],
                 keyPlaceholder: 'gsk_...'
             },
             openai: {
@@ -510,15 +511,30 @@ Please provide a clear, helpful answer based primarily on the document content.`
     }
 
     loadSettings() {
-        try {
-            const saved = localStorage.getItem('pdfQuerySettings');
-            if (saved) {
-                this.settings = { ...this.settings, ...JSON.parse(saved) };
-            }
-        } catch (e) {
-            console.log('LocalStorage not available in sandbox environment');
+    try {
+        const saved = localStorage.getItem('pdfQuerySettings');
+
+        if (saved) {
+            this.settings = {
+                ...this.settings,
+                ...JSON.parse(saved)
+            };
         }
+
+        // Replace outdated or unavailable saved Groq model
+        const provider = this.apiProviders[this.settings.apiProvider];
+
+        if (
+            provider &&
+            !provider.models.includes(this.settings.model)
+        ) {
+            this.settings.model = provider.models[0];
+        }
+
+    } catch (e) {
+        console.error('Error loading settings:', e);
     }
+}
 
     exportChat() {
         if (this.conversation.length === 0) {
